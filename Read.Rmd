@@ -1,0 +1,42 @@
+```{r}
+
+library(jsonlite)
+library(tidyverse)
+library(httr)
+
+url = "https://tgrcode.com/mm2/user_info/"
+
+userlist = read.table("user.txt", col.names=c("ID")) %>% 
+  mutate(ID = str_replace_all(ID, '-', ''))
+  
+n = nrow(userlist)
+
+for (i in 1:n) {
+  ID = userlist[i, ]
+  ID_url = paste0(url, ID)
+  text <- content(GET(ID_url), as = "text", encoding = "UTF-8")
+  user = fromJSON(text)
+  userdata = as.data.frame(do.call(cbind, user))
+  user_easy = userdata %>% 
+    select(code, name, country, last_active_pretty, mii_image, starts_with("versus"))
+  if (i == 1) {
+    all_user = user_easy
+    } else {
+    all_user = rbind(all_user, user_easy)  
+    }
+}
+
+
+all_user %>% distinct() -> all_user 
+
+test = all_user %>% 
+  select(code, name, mii_image, versus_rank_name)
+
+test = data.frame(i=i, ID = ID)
+
+write_csv(test, "output.csv")
+
+
+write.csv(all_user, "output.csv")
+
+```

@@ -1,0 +1,2 @@
+"code" "name" "country" "last_active_pretty" "mii_image" "versus_rating" "versus_rank" "versus_rank_name" "versus_won" "versus_lost" "versus_win_streak" "versus_lose_streak" "versus_plays" "versus_disconnected" "versus_kills" "versus_killed_by_others"
+"1" 
