@@ -11,7 +11,7 @@
 
 
 
-<title>index.knit</title>
+<title>Read.knit</title>
 
 <script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -263,10 +263,44 @@ $(document).ready(function () {
 </div>
 
 
-<ul>
-<li>Home</li>
-</ul>
-<p>** Test</p>
+<pre class="r"><code>library(jsonlite)
+library(tidyverse)
+library(httr)
+
+url = &quot;https://tgrcode.com/mm2/user_info/&quot;
+
+userlist = read.table(&quot;user.txt&quot;, col.names=c(&quot;ID&quot;)) %&gt;% 
+  mutate(ID = str_replace_all(ID, &#39;-&#39;, &#39;&#39;))
+  
+n = nrow(userlist)
+
+for (i in 1:n) {
+  ID = userlist[i, ]
+  ID_url = paste0(url, ID)
+  text &lt;- content(GET(ID_url), as = &quot;text&quot;, encoding = &quot;UTF-8&quot;)
+  user = fromJSON(text)
+  userdata = as.data.frame(do.call(cbind, user))
+  user_easy = userdata %&gt;% 
+    select(code, name, country, last_active_pretty, mii_image, starts_with(&quot;versus&quot;))
+  if (i == 1) {
+    all_user = user_easy
+    } else {
+    all_user = rbind(all_user, user_easy)  
+    }
+}
+
+
+all_user %&gt;% distinct() -&gt; all_user 
+
+test = all_user %&gt;% 
+  select(code, name, mii_image, versus_rank_name)
+
+test = data.frame(i=i, ID = ID)
+
+# write_csv(test, &quot;output.csv&quot;)
+
+#
+# write.csv(all_user, &quot;output.csv&quot;)</code></pre>
 
 
 

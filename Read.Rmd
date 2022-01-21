@@ -34,9 +34,9 @@ test = all_user %>%
 
 test = data.frame(i=i, ID = ID)
 
-write_csv(test, "output.csv")
+# write_csv(test, "output.csv")
 
-
-write.csv(all_user, "output.csv")
+#
+# write.csv(all_user, "output.csv")
 
 ```
