@@ -1,11 +1,9 @@
 name: "SMM2"
 output_dir: "docs"
 navbar:
-  title: "SMM2"
+  title: "谁是多人闸总王"
   left:
     - text: "Home"
       href: index.html
-    - text: "Reactable"
-      href: reactable.html
 output:
   html_document:
