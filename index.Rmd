@@ -1,3 +1,98 @@
-* Home
+---
+title: "谁是多人闸总王"
+---
+<style type="text/css">
+.main-container {
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
 
-** Test
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message=FALSE)
+```
+
+## 排名
+
+- Winrate: 胜率, won/plays
+- killrate: 击杀比, kills/killedby; 当 killedby = 0 时，等于 kills * 100
+
+```{r cars1,echo=FALSE}
+
+library(jsonlite)
+library(tidyverse)
+library(httr)
+library(pander)
+library(magick)
+library(htmltools)
+library(reactable)
+
+url = "https://tgrcode.com/mm2/user_info/"
+
+userlist = read.table("user.txt", col.names=c("ID")) %>% 
+  mutate(ID = str_replace_all(ID, '-', ''))
+  
+n = nrow(userlist)
+
+for (i in 1:n) {
+  ID = userlist[i, ]
+  ID_url = paste0(url, ID)
+  text <- content(GET(ID_url), as = "text", encoding = "UTF-8")
+  user = fromJSON(text)
+  userdata = as.data.frame(do.call(cbind, user))
+  user_easy = userdata %>% 
+    select(code, name, country, last_active_pretty, mii_image, starts_with("versus")) %>% 
+    rename(rankname = versus_rank_name ) %>% 
+    mutate_at(vars(matches("versus")), as.numeric)
+    # mutate(mii_image = as_vector(mii_image))  %>% 
+    # mutate(pic = image_read(as_vector(mii_image)))
+  user_easy = user_easy %>% distinct()
+  code = user_easy$code
+  imagefile = paste0("images/", code, ".jpg")
+ 
+  if (!file.exists(imagefile)) {
+    z = tempfile()
+    download.file(as_vector(user_easy$mii_image), z, mode="wb")
+    pic = image_read(as_vector(user_easy$mii_imag))
+    image_write(pic, path=imagefile, format="jpg")
+  }
+    
+  user_easy = user_easy %>% mutate(pic = imagefile)
+  
+  if (i == 1) {
+    all_user = user_easy
+    } else {
+    all_user = rbind(all_user, user_easy)  
+    }
+}
+
+
+all_user2 = all_user %>% 
+  distinct() %>% 
+  select(!mii_image)
+
+colnames(all_user2) = c("code", "name", "country", "last", "rating", "rank", 
+                        "rankname", "won", "lost", "winstreak", "losestreak", "plays", 
+                        "disc", "kills", "killedby", "pic")
+
+all_user2 = all_user2 %>% 
+  mutate(winrate = ifelse(plays==0, 0, round(won/plays*100)),
+         killrate = ifelse(killedby == 0, kills*100, round(kills/killedby, digits=1)))
+
+final = all_user2 %>% 
+  select(code, name, country, rankname, rating, won, lost, plays, winrate, kills, killedby, killrate)
+
+reactable(final, columns = list(
+  code = colDef(cell = function(value) {
+    img_src <- knitr::image_uri(sprintf("images/%s.jpg", value))
+    image <- img(src = img_src, height = "24px", alt = "")
+    tagList(
+      div(style = list(display = "inline-block", width = "45px"), image),
+      value
+    )
+  })
+  )
+  )
+```
